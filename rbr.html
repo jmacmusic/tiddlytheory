@@ -67,8 +67,8 @@
             color: black;
         }
         @font-face {
-          font-family: 'musiQwik'; 
-          src: url('./MusiQwik/MusiQwik.ttf') format('truetype'); 
+          font-family: 'musiQwik'; /* Use quotes around the name for consistency */
+          src: url('https://github.com/jmacmusic/tiddlytheory/raw/main/MusiQwik/MusiQwik.ttf') format('truetype'); /* Explicitly declare format */
         }
 
     </style>
@@ -406,13 +406,23 @@ useCustomFontCheckbox.addEventListener('change', () => {
 });
 
 
-function preloadFont(fontName) {
+function preloadFont() {
+    const fontName = fontDropdown.value;  // Get the font name directly from the dropdown
+    if (!fontName) return;  // If no font is selected, do nothing
+
+    // Load the font dynamically using its name (defined in @font-face)
     const font = new FontFace(fontName, `local('${fontName}')`);
-    document.fonts.add(font);
-    font.load().then(() => {
-        console.log(`${fontName} font loaded`);
-        applyFont(); // Apply font once loaded
-    }).catch(err => console.error(`Failed to load font: ${err.message}`));
+    
+    // Load the font and add it to the document fonts
+    font.load()
+        .then(() => {
+            document.fonts.add(font);
+            console.log(`${fontName} font loaded successfully.`);
+            applyFont(); // Apply the font to the display element
+        })
+        .catch(err => {
+            console.error(`Failed to load font "${fontName}": ${err.message}`);
+        });
 }
 
 // Apply selected font when dropdown value changes
