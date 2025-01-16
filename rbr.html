@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Black Relay</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 20px;
+        }
+        input {
+            margin: 5px;
+            padding: 5px;
+            font-size: 16px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .results {
+            margin-top: 20px;
+            font-size: 16px;
+            text-align: left;
+            display: inline-block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total-time, .previous-total-time {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            display: none;
+        }
+        .blink {
+            animation: blink 1s steps(1) infinite;
+        }
+        @keyframes blink {
+            0%, 100% { color: red; }
+            50% { color: black; }
+        }
+        textarea {
+            margin: 10px;
+            padding: 5px;
+            width: 90%;
+            height: 200px;
+            font-size: 16px;
+        }
+        .random-line-display {
+            margin-top: 20px;
+            font-size: 36px;
+            font-weight: bold;
+            color: black;
+        }
+
+@font-face {
+    font-family: 'musiQwik';
+    src: url(https://cors-anywhere.herokuapp.com/https://github.com/jmacmusic/tiddlytheory/raw/main/MusiQwik/MusiQwik.ttf);
+}
+
+
+    </style>
+</head>
+<body>
+    <h1>Red Black Relay</h1>
+    <div>
+        <input type="text" id="player1Name" placeholder="Player 1 Name" />
+        <input type="text" id="player1Year" placeholder="Year Group" />
+        <input type="text" id="player1Class" placeholder="Class" />
+        <input type="text" id="player2Name" placeholder="Player 2 Name" />
+        <input type="text" id="player2Year" placeholder="Year Group" />
+        <input type="text" id="player2Class" placeholder="Class" />
+        <input type="text" id="level" placeholder="Level" />
+        <input type="number" id="maxTime" placeholder="Max Time (seconds)" />
+        <input type="number" id="totalQuestions" placeholder="Total Questions" />
+    <label>
+        <input type="checkbox" id="useCustomFontCheckbox"> Custom Font
+    </label>
+    <select id="fontDropdown" style="display: none;">
+        <option value="">Select a font</option>
+        <option value="musiQwik">musiQwik</option>
+        <!-- Add more options here as you define new fonts -->
+    </select>
+</div>
+    <button id="turnButton">Turn</button>
+    <button id="finishButton">Finish</button>
+    <div class="previous-total-time" id="previousTotalTime"></div>
+    <div class="total-time" id="totalTime">Total Time: 0.00 seconds</div>
+    <div class="random-line-display" id="randomLineDisplay"></div>
+    <div class="results">
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Year</th>
+                    <th>Class</th>
+                    <th>Date</th>
+                    <th>Level</th>
+                    <th>q</th>
+                    <th>t</th>
+                    <th></th>
+                    <th>Questions</th>
+                    <th></th>
+                    <th></th>
+                    <th>Time (s)</th>
+                    <th>Avg Time (s)</th>
+                    <th>Total Questions</th>
+                    <th>Round Time (s)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+        <div>
+        <textarea id="randomLineInput" placeholder="Enter optional random quiz items, one per line..."></textarea>
+    </div>
+
+
+    <script>
+        let player1TotalTime = 0;
+        let player2TotalTime = 0;
+        let player1TotalQuestions = 0;
+        let player2TotalQuestions = 0;
+        let totalTime = 0;
+        let currentPlayer = 1;
+        let startTime = null;
+        let timerInterval = null;
+        let previousTotalTime = 0;
+        let maxTime = null;
+        let totalQuestions = null;
+
+        function updateTotalTimeDisplay() {
+            document.getElementById('totalTime').textContent = `Total Time: ${(totalTime / 1000).toFixed(2)} seconds`;
+            document.getElementById('totalTime').style.color = (currentPlayer === 1) ? 'red' : 'black';
+            document.getElementById('randomLineDisplay').style.color = (currentPlayer === 1) ? 'red' : 'black';
+        }
+
+        function hidePreviousTotalTime() {
+            let previousTimeDisplay = document.getElementById('previousTotalTime');
+            previousTimeDisplay.style.display = 'none';
+            previousTimeDisplay.classList.remove('blink');
+        }
+
+        function addRowToTable(player1Name, player2Name, level, player1Data, player2Data, totalRoundTime) {
+            const tableBody = document.querySelector('#resultsTable tbody');
+const date = new Date().toLocaleString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+}).replace(',', ''); // Removes the comma
+            const setQuestions = totalQuestions !== null ? 'Y' : '';
+            const setMaxTime = maxTime !== null ? 'Y' : '';
+
+            const newRow = `
+                <tr>
+                    <td>${player1Name}</td>
+                    <td>${document.getElementById('player1Year').value || 'Year'}</td>
+                    <td>${document.getElementById('player1Class').value || 'Class'}</td>
+                    <td>${date}</td>
+                    <td>${level}</td>
+                    <td>${setQuestions}</td>
+                    <td>${setMaxTime}</td>
+                    <td></td>
+                    <td>${player1Data.questions}</td>
+                    <td></td>
+                    <td></td>
+                    <td>${(player1Data.time / 1000).toFixed(2)}</td>
+                    <td>${player1Data.avgTime}</td>
+                    <td>${(player1Data.questions + player2Data.questions)}</td>
+                    <td>${(totalRoundTime / 1000).toFixed(2)}</td>
+                    <td><button class="deleteButton">Delete</button></td>
+                </tr>
+                <tr>
+                    <td>${player2Name}</td>
+                    <td>${document.getElementById('player2Year').value || 'Year'}</td>
+                    <td>${document.getElementById('player2Class').value || 'Class'}</td>
+                    <td>${date}</td>
+                    <td>${level}</td>
+                    <td>${setQuestions}</td>
+                    <td>${setMaxTime}</td>
+                    <td></td>
+                    <td>${player2Data.questions}</td>
+                    <td></td>
+                    <td></td>
+                    <td>${(player2Data.time / 1000).toFixed(2)}</td>
+                    <td>${player2Data.avgTime}</td>
+                    <td>${(player1Data.questions + player2Data.questions)}</td>
+                    <td>${(totalRoundTime / 1000).toFixed(2)}</td>
+                    <td><button class="deleteButton">Delete</button></td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML('afterbegin', newRow);
+
+            // Add delete functionality
+document.querySelectorAll('.deleteButton').forEach(button => {
+    button.addEventListener('click', function (event) {
+        // Check if the button is already in "confirmation" state
+        if (this.classList.contains('confirmDelete')) {
+            // If clicked again in the confirmation state, delete the row
+            this.closest('tr').remove();
+        } else {
+            // Set the button to the "confirmation" state
+            this.classList.add('confirmDelete');
+            this.style.backgroundColor = 'red';
+            this.style.color = 'white';
+            this.textContent = 'Really delete?';
+
+            // Listen for clicks outside the button to reset its state
+            const resetState = (e) => {
+                if (e.target !== this) {
+                    this.classList.remove('confirmDelete');
+                    this.style.backgroundColor = ''; // Reset to default
+                    this.style.color = ''; // Reset to default
+                    this.textContent = 'Delete'; // Reset text
+                    document.removeEventListener('click', resetState); // Remove event listener
+                }
+            };
+
+            // Add the listener to detect outside clicks
+            document.addEventListener('click', resetState);
+        }
+
+        // Prevent the event from propagating to the document-level listener
+        event.stopPropagation();
+    });
+});
+
+
+        }
+
+        function checkConditionsAndFinish() {
+            if ((maxTime !== null && totalTime >= maxTime * 1000) || 
+                (totalQuestions !== null && player1TotalQuestions + player2TotalQuestions >= totalQuestions))
+                {
+            clearInterval(timerInterval);
+            let turnTime = Date.now() - startTime;
+
+            previousTotalTime = totalTime;
+            totalTime = 0;
+
+            let player1Avg = player1TotalQuestions > 0 ? (player1TotalTime / player1TotalQuestions / 1000).toFixed(2) : 0;
+            let player2Avg = player2TotalQuestions > 0 ? (player2TotalTime / player2TotalQuestions / 1000).toFixed(2) : 0;
+
+            let player1Name = document.getElementById('player1Name').value || 'Player 1';
+            let player2Name = document.getElementById('player2Name').value || 'Player 2';
+            let level = document.getElementById('level').value || 'Level';
+
+            addRowToTable(player1Name, player2Name, level, 
+                { questions: player1TotalQuestions, time: player1TotalTime, avgTime: player1Avg },
+                { questions: player2TotalQuestions, time: player2TotalTime, avgTime: player2Avg },
+                previousTotalTime);
+
+            player1TotalTime = 0;
+            player2TotalTime = 0;
+            player1TotalQuestions = 0;
+            player2TotalQuestions = 0;
+            currentPlayer = 1;
+            startTime = null;
+
+            let previousTimeDisplay = document.getElementById('previousTotalTime');
+            previousTimeDisplay.textContent = `Total Time: ${(previousTotalTime / 1000).toFixed(2)} seconds`;
+            previousTimeDisplay.style.display = 'block';
+            previousTimeDisplay.classList.add('blink');
+
+            document.getElementById('totalTime').style.display = 'none';
+        }
+        }
+
+        document.getElementById('turnButton').addEventListener('click', function() {
+            hidePreviousTotalTime(); 
+
+            if (startTime === null) {
+                startTime = Date.now();
+                timerInterval = setInterval(() => {
+                    totalTime += 10;
+                    updateTotalTimeDisplay();
+                    checkConditionsAndFinish();
+                }, 10);
+                document.getElementById('totalTime').style.display = 'block';
+            } else {
+                clearInterval(timerInterval);
+                let turnTime = Date.now() - startTime;
+
+                if (currentPlayer === 1) {
+                    player1TotalTime += turnTime;
+                    player1TotalQuestions++;
+                    currentPlayer = 2;
+                } else {
+                    player2TotalTime += turnTime;
+                    player2TotalQuestions++;
+                    currentPlayer = 1;
+                }
+
+                startTime = Date.now();
+                timerInterval = setInterval(() => {
+                    totalTime += 10;
+                    updateTotalTimeDisplay();
+                    checkConditionsAndFinish();
+                }, 10);
+            }
+            randomLineDisplay.style.display = 'block';
+            showRandomLine()
+        });
+
+        document.getElementById('finishButton').addEventListener('click', function() {
+            clearInterval(timerInterval);
+            let turnTime = Date.now() - startTime;
+
+            if (currentPlayer === 1) {
+                player1TotalTime += turnTime;
+                player1TotalQuestions++;
+            } else {
+                player2TotalTime += turnTime;
+                player2TotalQuestions++;
+            }
+
+            previousTotalTime = totalTime;
+            totalTime = 0;
+
+            let player1Avg = player1TotalQuestions > 0 ? (player1TotalTime / player1TotalQuestions / 1000).toFixed(2) : 0;
+            let player2Avg = player2TotalQuestions > 0 ? (player2TotalTime / player2TotalQuestions / 1000).toFixed(2) : 0;
+
+            let player1Name = document.getElementById('player1Name').value || 'Player 1';
+            let player2Name = document.getElementById('player2Name').value || 'Player 2';
+            let level = document.getElementById('level').value || 'Level';
+
+            addRowToTable(player1Name, player2Name, level, 
+                { questions: player1TotalQuestions, time: player1TotalTime, avgTime: player1Avg },
+                { questions: player2TotalQuestions, time: player2TotalTime, avgTime: player2Avg },
+                previousTotalTime);
+
+            player1TotalTime = 0;
+            player2TotalTime = 0;
+            player1TotalQuestions = 0;
+            player2TotalQuestions = 0;
+            currentPlayer = 1;
+            startTime = null;
+
+            let previousTimeDisplay = document.getElementById('previousTotalTime');
+            previousTimeDisplay.textContent = `Total Time: ${(previousTotalTime / 1000).toFixed(2)} seconds`;
+            previousTimeDisplay.style.display = 'block';
+            previousTimeDisplay.classList.add('blink');
+
+            document.getElementById('totalTime').style.display = 'none';
+            randomLineDisplay.style.display = 'none';
+        });
+
+                document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                        if (document.activeElement !== randomLineInput) {
+            event.preventDefault(); document.getElementById('turnButton').click();
+            }
+            }
+            if (event.key === 'Escape') {
+                document.getElementById('finishButton').click();
+            }
+        });
+
+        document.getElementById('maxTime').addEventListener('input', function() {
+            maxTime = parseInt(this.value) || null;
+        });
+
+        document.getElementById('totalQuestions').addEventListener('input', function() {
+            totalQuestions = parseInt(this.value) || null;
+        });
+                function showRandomLine() {
+            const input = document.getElementById('randomLineInput').value;
+            const lines = input.split('\n').filter(line => line.trim() !== '');
+            if (lines.length > 0) {
+                const randomLine = lines[Math.floor(Math.random() * lines.length)];
+                document.getElementById('randomLineDisplay').textContent = `${randomLine}`;
+            } else {
+                document.getElementById('randomLineDisplay').textContent = '';
+            }
+        }
+     const useCustomFontCheckbox = document.getElementById('useCustomFontCheckbox');
+     const fontDropdown = document.getElementById('fontDropdown');
+// Toggle enabling/disabling the dropdown
+useCustomFontCheckbox.addEventListener('change', () => {
+    if (useCustomFontCheckbox.checked) {
+        fontDropdown.style.display = 'inline'; // Show dropdown
+        applyFont(); // Apply selected font immediately
+    } else {
+        fontDropdown.style.display = 'none'; // Hide dropdown
+        randomLineDisplay.style.fontFamily = ''; // Revert to default
+    }
+});
+
+
+function preloadFont(fontName) {
+    const font = new FontFace(fontName, `local('${fontName}')`);
+    document.fonts.add(font);
+    font.load().then(() => {
+        console.log(`${fontName} font loaded`);
+        applyFont(); // Apply font once loaded
+    }).catch(err => console.error(`Failed to load font: ${err.message}`));
+}
+
+// Apply selected font when dropdown value changes
+fontDropdown.addEventListener('change', () => {
+    if (useCustomFontCheckbox.checked) {
+        applyFont();
+        preloadFont(fontDropdown.value);
+    }
+});
+
+function applyFont() {
+    const selectedFont = fontDropdown.value;
+    if (selectedFont) {
+        randomLineDisplay.style.fontFamily = selectedFont;
+    } else {
+        randomLineDisplay.style.fontFamily = ''; // Revert if no font selected
+    }
+}
+
+    </script>
+</body>
+</html>
