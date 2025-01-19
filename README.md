@@ -4,6 +4,8 @@
   - Recall
   - Fluency
   - Application
+...in the context of a carefully-sequenced, knowledge-rich Music curriculum  
+...that can be applied to any subject domain
 - Automate planning, assessment and reporting tasks as much as possible
 # Roadmap
 
@@ -33,5 +35,8 @@
 ### Done
 
 ## Ultimate Spreadsheet of Doom
+- Lesson View
+- Student View
+- 
 ### Disordered ideas...
 ### Done
