@@ -1,3 +1,11 @@
+# Project aims
+- Create a suite of easily-accessible tools for teachers to use that develop
+  - Understanding
+  - Recall
+  - Fluency
+  - Application
+  Starting with music-specific but customisable to fit any subject domain
+
 # Roadmap
 
 ## jackmackenzie.com
