@@ -1,11 +1,10 @@
 # Project aims
-- Create a suite of easily-accessible tools for teachers to use that develop
+- Create a suite of easily-accessible tools for teachers to use that develop pupils'
   - Understanding
   - Recall
   - Fluency
   - Application
-  Starting with music-specific but customisable to fit any subject domain
-
+- Automate planning, assessment and reporting tasks as much as possible
 # Roadmap
 
 ## jackmackenzie.com
