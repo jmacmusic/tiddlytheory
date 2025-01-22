@@ -4,8 +4,10 @@
   - Recall
   - Fluency
   - Application
-...in the context of a carefully-sequenced, knowledge-rich Music curriculum  
-...that can be applied to any subject domain
+
+  ...in the context of a carefully-sequenced, knowledge-rich Music curriculum\
+  ...that can be applied to any subject domain
+
 - Automate planning, assessment and reporting tasks as much as possible
 # Roadmap
 
@@ -36,6 +38,13 @@
 
 ## Ultimate Spreadsheet of Doom
 - Lesson View
+  - Seating plan generator - visual representation of layout
+  - 'Skills covered' list with class, year and school records displayed
+  - 'Skill focus' area
+    - Class record + standardised score
+    - Last 6 trials
+      - class average time, sparkline of averages
+      - class average standardised score, sparkline of standardised score
 - Student View
 - 
 ### Disordered ideas...
